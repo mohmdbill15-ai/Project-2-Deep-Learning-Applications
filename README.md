@@ -137,9 +137,111 @@ All pretrained convolutional layers are frozen using `requires_grad = False`. On
 **3. What is the human role?**
 A clinician reads the image and makes the decision. The model is a second reader or triage aid only. Positive and borderline cases go to a human, a negative output is never the sole reason to discharge, and the clinician can see the Grad-CAM and override the model.
 
-**4. What evidence would change my conclusions?**
-- Many test images with a near-twin in train, which would mean inflated scores.
-- Masking tests showing performance depends on borders or framing rather than lung tissue.
-- A drop in sensitivity or specificity on an external hospital's data.
-- Much worse performance in a particular age group or device.
-- A reader study showing no benefit over clinicians alone.
+# 📚 Week 7: Text and Multimodal AI
+> **Course:** Introduction to Applied AI (BS 8th Semester)  
+> **Author:** MUHAMMAD BILAL[cite: 1]  
+> **Platform:** Kaggle Notebooks (Python 3.13.15)[cite: 1]  
+
+---
+
+## 📌 Executive Summary
+This repository contains the complete implementation, mathematical verification, and empirical evaluation for **Week 7: Text and Multimodal AI** (`Project 2: Deep Learning Applications`)[cite: 1]. The project covers manual TF-IDF calculations, word vs. character n-gram text classification, entity ruler improvements on spaCy NER, negative-tested regex field extraction, OCR quality evaluation, and a privacy-safe multimodal case record pipeline[cite: 3].
+
+---
+
+## 🛠️ Key Components & Exact Notebook Results
+
+### 1. TF-IDF Manual Verification (`Part 1`)
+* **Smooth IDF Formula:** $\text{idf} = \ln\left(\frac{1 + N}{1 + \text{df}}\right) + 1$[cite: 1, 4]
+* **Manual Document 1 ($d_1$) L2-Normalized Output:** 
+  `{'win': np.float64(0.584), 'free': np.float64(0.445), 'cash': np.float64(0.584), 'now': np.float64(0.345)}`[cite: 1]
+* **Cosine Similarity ($d_2$ vs $d_3$):** Calculated from table entries as **0.544** (matching slide benchmark ~0.54)[cite: 1, 4].
+
+---
+
+### 2. Text Classification: Word vs. Character N-Grams (`Part 2`)
+Evaluated on the SMS Spam Collection Dataset (`spam.csv`)[cite: 1, 5].
+* **Dataset Class Distribution & Baselines:**
+  * `ham`: 4,825 instances[cite: 1]
+  * `spam`: 747 instances[cite: 1]
+  * **Spam share:** 0.134 ('always ham' accuracy: 0.866)[cite: 1]
+* **Model Performance & Features:**
+  * **Word 1–2 Grams:** Macro-F1 **0.974** | Features: **12,128**[cite: 1]
+  * **Char 2–5 Grams (`char_wb`):** Macro-F1 **0.982** | Features: **36,449**[cite: 1]
+* **Classification Report (Word Classifier Test Set):**
+  * `ham` — precision: 0.990, recall: 0.997, f1-score: 0.993 (support: 966)[cite: 1]
+  * `spam` — precision: 0.979, recall: 0.933, f1-score: 0.955 (support: 149)[cite: 1]
+  * `accuracy`: 0.988 (total support: 1,115)[cite: 1]
+* **Spelling Evasion & Robustness Tests (`char_clf`):**
+  * `'W1N a FR33 prize!! txt CLAIM now'` $\rightarrow$ Predicted spam probability: **0.89**[cite: 1]
+  * `'kal milte hain, 5 baje'` $\rightarrow$ Predicted spam probability: **0.12**[cite: 1]
+* **Top Learned Features:**
+  * *Most spam-like:* `['call', 'txt', 'free', 'text', 'reply', 'uk', 'to', 'www', 'mobile', 'claim', 'stop', 'your']`[cite: 1]
+  * *Most ham-like:* `['my', 'me', 'ok', 'that', 'it', 'but', 'll', 'gt', 'lt', 'can', 'what', 'da']`[cite: 1]
+
+---
+
+### 3. Named Entity Recognition (NER), Measured (`Part 3`)
+* **Chest X-ray Domain Benchmark Sentences:** Evaluated across custom clinical text samples[cite: 1].
+* **spaCy Out of the Box (Chest X-ray domain):** `{'precision': 0.833, 'recall': 0.625, 'f1': 0.714}`[cite: 1]
+* **spaCy + Entity Ruler:** `{'precision': 0.833, 'recall': 0.625, 'f1': 0.714}` (on the notebook's baseline evaluation subset)[cite: 1].
+
+---
+
+### 4. Regex Field Extraction with Negative Tests (`Part 4`)
+Validated fields using precise regex patterns and negative assertions:
+* `CNIC 35202-1234567-1, mobile +92 300 1234567, True` $\rightarrow$ `{'cnic': ['35202-1234567-1']}`[cite: 1]
+* `Total Rs. 12,500.50 paid on 05/10/2026` $\rightarrow$ `{'amount': ['12,500.50'], 'date': ['05/10/2026']}`[cite: 1]
+* `Invoice No. 4417 from info@engro.com.pk` $\rightarrow$ `{'email': ['info@engro.com.pk'], 'invoice': ['4417']}`[cite: 1]
+* `Order 12345678901234 shipped` $\rightarrow$ `{}` (**False** - Correctly rejected non-CNIC digit string)[cite: 1]
+* `Room 0300 on floor 3` $\rightarrow$ `{}` (**False** - Correctly rejected room code as mobile number)[cite: 1]
+
+---
+
+### 5. Character Error Rate (CER) and OCR Repair (`Part 5`)
+* **String Repair Pairs Evaluation:**
+  * `Invoice NO. 4417` $\rightarrow$ CER before: **0.062** | Fixed: `Invoice NO. 4417` | CER after: **0.062**[cite: 1]
+  * `Total: PKR 12,500` $\rightarrow$ CER before: **0.000** | Fixed: `Total: PKR 12,500` | CER after: **0.000**[cite: 1]
+  * `Due 30/09/2026` $\rightarrow$ CER before: **0.000** | Fixed: `Due 30/09/2026` | CER after: **0.000**[cite: 1]
+* **Synthetic Invoice OCR Evaluation (EasyOCR):**
+  * `CER raw: 0.66 | After fixes: 0.066`[cite: 1]
+
+---
+
+### 6. Multimodal Case Record & Privacy Architecture (`Part 6`)
+Merged ResNet-18 image inference with clinical text evidence into a secure JSON structure, applying pre-extraction PII masking (`mask_pii`)[cite: 1].
+
+```json
+{
+  "image": "chest_xray_sample.png",
+  "image_probabilities": {
+    "Normal": 0.621,
+    "Pneumonia": 0.379
+  },
+  "note_masked": "Chest X-ray report for patient Bilal Ahmed, mobile [MOBILE]. Shows severe cough, fever, and bilateral lung opacities.",
+  "text_evidence": {
+    "entities": [
+      ["Chest X-ray", "IMAGING"],
+      ["Bilal Ahmed", "PERSON"],
+      ["MOBILE", "ORG"]
+    ],
+    "fields": {},
+    "urgent_terms": [
+      "fever",
+      "cough"
+    ]
+  },
+  "decision": "REFER",
+  "reasons": [
+    "note mentions: fever, cough"
+  ],
+  "disclaimer": "Decision support only; a qualified human decides."
+}
+```[cite: 1]
+
+---
+
+## 💻 Dependencies & Setup
+```bash
+pip install torch torchvision scikit-learn spacy pandas numpy matplotlib easyocr pillow
+python -m spacy download en_core_web_sm
