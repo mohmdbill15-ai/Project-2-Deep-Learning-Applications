@@ -1,4 +1,4 @@
-# Project 2: Scene Classification with Transfer Learning
+  # Project 2: Scene Classification with Transfer Learning
 
 **Deep Learning | CNN | PyTorch | ResNet-18**
 
@@ -234,14 +234,10 @@ Merged ResNet-18 image inference with clinical text evidence into a secure JSON 
   "decision": "REFER",
   "reasons": [
     "note mentions: fever, cough"
-  ],
+  ],{
   "disclaimer": "Decision support only; a qualified human decides."
 }
-
-
-
-
-
+}
 
 
 
