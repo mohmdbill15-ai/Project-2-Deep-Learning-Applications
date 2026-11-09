@@ -237,9 +237,13 @@ Merged ResNet-18 image inference with clinical text evidence into a secure JSON 
   ],
   "disclaimer": "Decision support only; a qualified human decides."
 }
-```[cite: 1]
 
----
+
+
+
+
+
+
 
 ## 💻 Dependencies & Setup
 ```bash
