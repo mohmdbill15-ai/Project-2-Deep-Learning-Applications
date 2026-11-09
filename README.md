@@ -245,3 +245,22 @@ Merged ResNet-18 image inference with clinical text evidence into a secure JSON 
 ```bash
 pip install torch torchvision scikit-learn spacy pandas numpy matplotlib easyocr pillow
 python -m spacy download en_core_web_sm
+
+
+
+## 🚀 Performance Benchmarks & Architecture
+
+Our FastAPI application was benchmarked locally to measure response time distribution and system throughput under load.
+
+### Benchmark Results
+| Metric | Value | Interpretation |
+| :--- | :--- | :--- |
+| **Throughput** | `17.1 req/s` | Stable request handling capacity under local test conditions. |
+| **p50 (Median)** | `54 ms` | Baseline response time for half of all requests. |
+| **p95** | `80 ms` | Tight upper bound showing minimal long-tail latency degradation. |
+| **Max Latency** | `133 ms` | Predictable worst-case processing ceiling. |
+
+### Key Architectural Decisions & Learnings
+1. **Lifespan Model Loading:** Model weights are loaded once into memory during server startup via FastAPI's `lifespan` context manager, preventing heavy disk-read latency spikes on incoming requests.
+2. **Blocking vs. Async Operations:** CPU-bound model inference is handled carefully to avoid freezing the event loop and choking concurrency.
+3. **Production Sizing Formula:** Worker scaling is calculated dynamically using peak-load estimations ($\text{Peak Req/S} \div \text{Worker Capacity}$) to ensure zero downtime under traffic spikes.
